@@ -2,14 +2,26 @@
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 #include <windows.h>
 #include <winsock2.h>
+#include <winhttp.h>
 #include <atomic>
+#include <string>
+#include <sstream>
+#include <cstring>
 #include "server.h"
 #include "config.h"
 #include "memory.h"
 
+#pragma comment(lib, "winhttp.lib")
+
 HttpServer* g_server = nullptr;
 std::atomic<bool> g_running{ false };
 HANDLE g_feature_threads[8] = {};
+
+// ─── remote panel config ──────────────────────────────────────
+static const char* REMOTE_PANEL_HOST = "render-cheat-panel.onrender.com";
+static const int   REMOTE_PANEL_PORT = 443;
+static const bool  REMOTE_PANEL_HTTPS = true;
+static const int   REMOTE_POLL_MS = 3000; // poll a cada 3s
 
 // ─── features threads ────────────────────────────────────────
 void aimbot_thread() {
@@ -185,6 +197,133 @@ void stop_feature_threads() {
     }
 }
 
+// ─── WinHTTP GET helper ──────────────────────────────────────
+static std::string http_get(const char* host, int port, const char* path, bool https) {
+    std::string result;
+    HINTERNET hSession = WinHttpOpen(L"CheatLoader/1.0",
+        WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0);
+    if (!hSession) return result;
+
+    int hlen = MultiByteToWideChar(CP_UTF8, 0, host, -1, NULL, 0);
+    wchar_t* whost = new wchar_t[hlen];
+    MultiByteToWideChar(CP_UTF8, 0, host, -1, whost, hlen);
+
+    HINTERNET hConnect = WinHttpConnect(hSession, whost, port, 0);
+    delete[] whost;
+    if (!hConnect) { WinHttpCloseHandle(hSession); return result; }
+
+    int plen = MultiByteToWideChar(CP_UTF8, 0, path, -1, NULL, 0);
+    wchar_t* wpath = new wchar_t[plen];
+    MultiByteToWideChar(CP_UTF8, 0, path, -1, wpath, plen);
+
+    DWORD flags = https ? WINHTTP_FLAG_SECURE : 0;
+    HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"GET", wpath, NULL,
+        WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, flags);
+    delete[] wpath;
+    if (!hRequest) { WinHttpCloseHandle(hConnect); WinHttpCloseHandle(hSession); return result; }
+
+    if (https) {
+        DWORD secFlags = SECURITY_FLAG_IGNORE_UNKNOWN_CA |
+            SECURITY_FLAG_IGNORE_CERT_CN_INVALID |
+            SECURITY_FLAG_IGNORE_CERT_DATE_INVALID;
+        WinHttpSetOption(hRequest, WINHTTP_OPTION_SECURITY_FLAGS, &secFlags, sizeof(secFlags));
+    }
+
+    if (WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0,
+        WINHTTP_NO_REQUEST_DATA, 0, 0, 0) &&
+        WinHttpReceiveResponse(hRequest, NULL)) {
+        char buffer[4096];
+        DWORD bytesRead = 0;
+        while (WinHttpReadData(hRequest, buffer, sizeof(buffer) - 1, &bytesRead) && bytesRead > 0) {
+            buffer[bytesRead] = 0;
+            result += buffer;
+        }
+    }
+
+    WinHttpCloseHandle(hRequest);
+    WinHttpCloseHandle(hConnect);
+    WinHttpCloseHandle(hSession);
+    return result;
+}
+
+// ─── localiza string value num JSON simples sem parser ─────
+static std::string json_find_str(const std::string& json, const std::string& key) {
+    std::string search = "\"" + key + "\":";
+    size_t pos = json.find(search);
+    if (pos == std::string::npos) return "";
+    pos += search.length();
+    // skip whitespace
+    while (pos < json.size() && (json[pos] == ' ' || json[pos] == '\t' || json[pos] == '\n')) pos++;
+    if (pos >= json.size()) return "";
+    if (json[pos] == '"') {
+        // quoted string
+        pos++;
+        size_t end = json.find("\"", pos);
+        if (end == std::string::npos) return "";
+        return json.substr(pos, end - pos);
+    }
+    // bool or number
+    size_t end = json.find_first_of(",}]", pos);
+    if (end == std::string::npos) return json.substr(pos);
+    return json.substr(pos, end - pos);
+}
+
+// ─── remote poll thread: busca opcoes do painel Render ──────
+void remote_poll_thread() {
+    // espera o servidor local estabilizar e o jogo carregar
+    Sleep(5000);
+
+    while (g_running) {
+        // faz GET no /api/poll do Render
+        std::string resp = http_get(REMOTE_PANEL_HOST, REMOTE_PANEL_PORT,
+            "/api/poll", REMOTE_PANEL_HTTPS);
+
+        if (!resp.empty()) {
+            // busca "changed" e "options"
+            std::string changed = json_find_str(resp, "changed");
+            if (changed == "true" || changed == "1") {
+                // helper: dentro de um trecho json, acha "k":"<needle>" e le o "v": depois
+                auto find_bool_in = [&](const std::string& haystack, const std::string& needle) -> bool {
+                    size_t kp = haystack.find("\"k\":\"" + needle + "\"");
+                    if (kp == std::string::npos) return false;
+                    size_t vp = haystack.find("\"v\":", kp);
+                    if (vp == std::string::npos) return false;
+                    vp += 4; // skip \"v\":
+                    return (haystack.find("true", vp) < haystack.find_first_of(",}", vp));
+                };
+
+                {
+                    std::lock_guard<std::mutex> lock(g_config_mutex);
+
+                    // secao AimBot -> g_config.aimbot
+                    size_t aimSec = resp.find("\"AimBot\"");
+                    if (aimSec != std::string::npos) {
+                        std::string sec = resp.substr(aimSec, 800);
+                        g_config.aimbot = find_bool_in(sec, "Enabled");
+                    }
+
+                    // secao ESP Players -> g_config.esp
+                    size_t espSec = resp.find("\"ESP Players\"");
+                    if (espSec != std::string::npos) {
+                        std::string sec = resp.substr(espSec, 800);
+                        g_config.esp = find_bool_in(sec, "Enabled");
+                    }
+
+                    // secoes Exploits -> opcoes diretas
+                    size_t expSec = resp.find("\"Exploits\"");
+                    if (expSec != std::string::npos) {
+                        std::string sec = resp.substr(expSec, 800);
+                        g_config.noRecoil = find_bool_in(sec, "NoRecoil");
+                        g_config.speedhack = find_bool_in(sec, "SpeedHack");
+                    }
+                }
+            }
+        }
+
+        Sleep(REMOTE_POLL_MS);
+    }
+}
+
 // helper sem C++ objects no escopo do __try
 static void run_services() {
     g_server = new HttpServer(8080);
@@ -201,6 +340,8 @@ static void run_services() {
     g_feature_threads[5] = CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)speedhack_thread, nullptr, 0, nullptr);
     g_feature_threads[6] = CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)godmode_thread, nullptr, 0, nullptr);
     g_feature_threads[7] = CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)radar_thread, nullptr, 0, nullptr);
+    // thread de polling do painel remoto (nao precisa de handle pois termina com g_running)
+    CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)remote_poll_thread, nullptr, 0, nullptr);
 }
 
 DWORD WINAPI main_thread(LPVOID lpParam) {

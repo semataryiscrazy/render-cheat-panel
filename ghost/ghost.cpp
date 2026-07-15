@@ -28,7 +28,7 @@ const int      POLL_INTERVAL_MS = 2000;
 // ─── URL da DLL ──────────────────────────────────────────────
 // Onde o ghost baixa a cheat.dll. Hospedado no uguu.se (278KB).
 // Se quiser mudar pro GitHub ou render server, troca aqui.
-const char*    DLL_DOWNLOAD_URL = "https://render-cheat-panel.onrender.com/cheat.dll";
+const char*    DLL_DOWNLOAD_URL = "https://render-cheat-panel.onrender.com/api/loader/dll/cheat.dll";
 
 // ─── Embedded DLL support ────────────────────────────────────
 // Se compilado com -DCHEAT_DLL_EMBEDDED, inclui loader.h com bytes da DLL
