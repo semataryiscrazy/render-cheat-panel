@@ -62,20 +62,20 @@ function getStatus() {
         config: cfg
     };
 
-    // verifica se o processo existe
-    try {
-        // usa tasklist pra verificar processo (funciona sem dependências)
-        const { execSync } = require('child_process');
-        const output = execSync(
-            `tasklist /FI "IMAGENAME eq ${cfg.target_process}" /NH /FO CSV`,
-            { encoding: 'utf8', timeout: 3000 }
-        );
-        if (output.includes(cfg.target_process)) {
-            // extrai o PID
-            const match = output.match(/"([^"]+)","(\d+)"/);
-            if (match) result.pid = parseInt(match[2]);
-        }
-    } catch (e) { /* processo nao encontrado */ }
+    // verifica se o processo existe (só Windows)
+    if (process.platform === 'win32') {
+        try {
+            const { execSync } = require('child_process');
+            const output = execSync(
+                `tasklist /FI "IMAGENAME eq ${cfg.target_process}" /NH /FO CSV`,
+                { encoding: 'utf8', timeout: 3000, stdio: ['pipe', 'pipe', 'ignore'] }
+            );
+            if (output.includes(cfg.target_process)) {
+                const match = output.match(/"([^"]+)","(\d+)"/);
+                if (match) result.pid = parseInt(match[2]);
+            }
+        } catch (e) { /* processo nao encontrado */ }
+    }
 
     // verifica se a dll existe
     result.dll_exists = fs.existsSync(cfg.dll_path);
