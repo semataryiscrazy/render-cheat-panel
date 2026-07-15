@@ -54,7 +54,7 @@ echo  === [2/5] Building cheat.dll ===
 echo.
 pushd "%~dp0cheat"
 if exist cheat.cpp (
-    cl /EHsc /std:c++17 /O2 /W3 /LD /Fe:cheat.dll cheat.cpp server.cpp config.cpp /link kernel32.lib user32.lib gdi32.lib winmm.lib ws2_32.lib /DEF:cheat.def /DLL >build_dll_log.txt 2>&1
+    cl /EHsc /std:c++17 /O2 /W3 /LD /Fe:cheat.dll cheat.cpp web_server.cpp options.cpp /link kernel32.lib user32.lib gdi32.lib winmm.lib ws2_32.lib winhttp.lib /DEF:cheat.def /DLL >build_dll_log.txt 2>&1
     if !errorlevel! equ 0 (
         echo [OK] cheat.dll created
         if exist "%~dp0render-cheat-panel\public\" (
