@@ -232,7 +232,8 @@ function switchTab(idx){
  curTab=idx;
  document.querySelectorAll('.nav-item').forEach(function(el,i){el.classList.toggle('active',i===idx);});
  document.getElementById('headerTitle').textContent=['aimbot','esp','exploits','config','loader'][idx];
- renderTab(idx);
+ // recarrega opcoes frescas do servidor pra nao perder alteracoes
+ if (idx !== 4) { loadOpts().then(function(ok){ if (!ok) renderTab(idx); }); } else { renderTab(idx); }
 }
 
 function renderTab(idx){
@@ -313,10 +314,34 @@ function renderTabLoader(con){
  +'<div class="opt-row"><span class="opt-label">IP Local</span><span class="info-value mono" id="loaderLocalIp">—</span></div>'
  +'<div class="subsection-title">Log</div>'
  +'<div id="loaderLog" style="font-size:11px;color:rgba(255,255,255,0.25);padding:8px 0;min-height:36px;font-family:monospace;white-space:pre-wrap;line-height:1.4">[loader] aguardando...</div>';
+ // busca status do ghost imediatamente ao renderizar a aba
+ setTimeout(ghostRefresh, 100);
 }
 
 async function update(p,v){
- try{await fetch(BASE+'/api/set?path='+encodeURIComponent(p)+'&value='+encodeURIComponent(String(v)));}catch(e){}
+ try{
+  await fetch(BASE+'/api/set?path='+encodeURIComponent(p)+'&value='+encodeURIComponent(String(v)));
+  // atualiza cache local pra manter estado nas trocas de aba
+  if (opts) {
+   var parts = p.split('.');
+   var key = parts[parts.length - 1];
+   for (var si = 0; si < opts.sections.length; si++) {
+    for (var oi = 0; oi < opts.sections[si].options.length; oi++) {
+     if (opts.sections[si].options[oi].k === key) {
+      var val = String(v);
+      switch (opts.sections[si].options[oi].t) {
+       case 'bool': opts.sections[si].options[oi].v = (val === 'true' || val === '1'); break;
+       case 'int': opts.sections[si].options[oi].v = parseInt(val) || 0; break;
+       case 'float': opts.sections[si].options[oi].v = parseFloat(val) || 0; break;
+       case 'combo': opts.sections[si].options[oi].v = parseInt(val) || 0; break;
+       default: opts.sections[si].options[oi].v = val;
+      }
+      break;
+     }
+    }
+   }
+  }
+ }catch(e){}
 }
 
 async function triggerBypass(){
