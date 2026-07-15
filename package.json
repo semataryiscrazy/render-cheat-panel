@@ -1,0 +1,11 @@
+{
+  "name": "nyx-render-panel",
+  "version": "1.0.0",
+  "description": "Satella cheat web panel — Render deploy",
+  "scripts": {
+    "start": "node render-cheat-panel/server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

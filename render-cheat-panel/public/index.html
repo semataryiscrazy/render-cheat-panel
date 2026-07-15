@@ -290,7 +290,7 @@ function renderTab(idx){
    +'<div class="subsection-title">Bypass</div>'
    +'<div class="opt-row"><span class="opt-label">Stream Proof Bypass</span><div class="opt-control"><button id="bypassBtn" onclick="triggerBypass()" style="padding:4px 12px;border:none;border-radius:4px;cursor:pointer;font-size:12px;background:rgba(123,47,252,0.7);color:rgba(255,255,255,0.9);transition:.15s">Activate Bypass</button></div></div>'
    +'<div class="subsection-title">Keybinds</div>'
-   +row('Aimbot Key',ctrl(byKey(o,'KeyBind'),'LegitBot.AimBot.KeyBind'));
+   +row('Menu Toggle Key',ctrl(byKey(o,'MenuToggleKey'),'General.MenuToggleKey'));
  }
  con.innerHTML=html;
  con.classList.remove('tab-fade');
@@ -494,7 +494,8 @@ async function loaderSaveConfig() {
   });
   var d = await r.json();
   if (d.success) {
-   loaderLog('config salva (dll: ' + path.basename(cfg.dll_path || '—') + ')');
+    var dllName = (cfg.dll_path || '—').split('\\').pop().split('/').pop();
+    loaderLog('config salva (dll: ' + dllName + ')');
    addNotif('Config saved', 'rgb(0,214,115)', '\u2713');
   }
  } catch(e) {
