@@ -1,0 +1,695 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lunar</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;user-select:none}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:#000;overflow:hidden;height:100vh;display:flex;align-items:center;justify-content:center}
+
+/* ── particles ── */
+.particle{position:fixed;border-radius:50%;pointer-events:none;z-index:0;animation:float linear infinite}
+@keyframes float{0%{opacity:0;transform:translateY(0) scale(1)}8%{opacity:1}85%{opacity:1}100%{opacity:0;transform:translateY(-100vh) scale(0.5)}}
+
+/* ── splash / loading ── */
+#splash{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:24px;background:#000;transition:opacity .6s ease,visibility .6s ease}
+#splash.hidden{opacity:0;visibility:hidden;pointer-events:none}
+#splash-title{font-size:28px;font-weight:200;color:#fff;letter-spacing:8px;text-transform:uppercase;animation:splashPulse 2s ease-in-out infinite}
+@keyframes splashPulse{0%,100%{opacity:0.6}50%{opacity:1}}
+#splash-loader{width:24px;height:24px;border:1px solid rgba(255,255,255,0.08);border-top-color:rgba(255,255,255,0.5);border-radius:50%;animation:spin .8s cubic-bezier(.6,.0,.4,1) infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#splash-status{font-size:10px;color:rgba(255,255,255,0.12);letter-spacing:2px;text-transform:uppercase}
+
+/* ── login ── */
+#login{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;background:#000;transition:opacity .5s ease,visibility .5s ease}
+#login.hidden{opacity:0;visibility:hidden;pointer-events:none}
+#login-title{font-size:26px;font-weight:200;color:#fff;letter-spacing:10px;text-transform:uppercase;margin-bottom:4px}
+#login-sub{font-size:9px;color:rgba(255,255,255,0.15);letter-spacing:3px;text-transform:uppercase;margin-bottom:8px}
+#login-input{width:240px;height:34px;background:transparent;border:1px solid rgba(255,255,255,0.1);padding:0 12px;font-size:12px;color:#fff;outline:none;transition:.25s ease;letter-spacing:2px;text-transform:uppercase;text-align:center}
+#login-input:focus{border-color:rgba(255,255,255,0.25)}
+#login-input::placeholder{color:rgba(255,255,255,0.08);letter-spacing:2px;font-size:10px}
+#login-btn{width:240px;height:34px;cursor:pointer;font-size:10px;font-weight:300;color:rgba(255,255,255,0.5);background:transparent;border:1px solid rgba(255,255,255,0.1);transition:all .25s ease;letter-spacing:3px;text-transform:uppercase}
+#login-btn:hover{background:rgba(255,255,255,0.03);border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.7)}
+#login-btn:active{transform:scale(.97)}
+#login-status{font-size:9px;color:rgba(255,255,255,0.06);letter-spacing:2px;text-transform:uppercase}
+
+#app{position:relative;z-index:1;width:100vw;height:100vh;opacity:0;transition:opacity .8s ease}
+#app.visible{opacity:1}
+
+/* ── header ── */
+.main-header{position:fixed;top:0;left:0;width:100%;height:40px;z-index:10;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:space-between;padding:0 20px}
+.header-title{font-size:11px;font-weight:300;color:rgba(255,255,255,0.3);letter-spacing:3px;text-transform:uppercase}
+.header-info{font-size:9px;color:rgba(255,255,255,0.1);letter-spacing:1px}
+
+/* ── main content ── */
+.main-content{position:fixed;top:40px;left:0;width:100%;height:calc(100vh - 40px - 40px);padding:24px}
+.content-child{width:100%;height:100%;overflow-y:auto;padding:0}
+.content-child::-webkit-scrollbar{width:2px}
+.content-child::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:9px}
+
+/* ── section titles ── */
+.section-title{font-size:9px;font-weight:400;color:rgba(255,255,255,0.15);margin-bottom:18px;letter-spacing:3px;text-transform:uppercase}
+.subsection-title{font-size:9px;font-weight:400;color:rgba(255,255,255,0.08);margin:22px 0 10px;letter-spacing:2px;text-transform:uppercase}
+
+/* ── option rows ── */
+.opt-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.02);margin:0;transition:background .15s}
+.opt-row:hover{background:rgba(255,255,255,0.01)}
+.opt-row-cols{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.opt-row-cols .opt-row{border-bottom:1px solid rgba(255,255,255,0.02);padding:7px 4px;margin:0}
+.opt-label{font-size:12px;color:rgba(255,255,255,0.45);letter-spacing:0.2px;transition:color .2s}
+.opt-row:hover .opt-label{color:rgba(255,255,255,0.6)}
+.opt-control{display:flex;align-items:center;gap:8px}
+
+/* ── checkbox ── */
+.checkbox-wrap{display:inline-flex;align-items:center;gap:8px;cursor:pointer;padding:3px 0;user-select:none;border-radius:4px;transition:background .2s}
+.checkbox-wrap:active{background:rgba(255,255,255,0.03)}
+.checkbox-box{width:14px;height:14px;border:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;background:transparent;transition:all .2s cubic-bezier(.4,.0,.2,1);border-radius:2px}
+.checkbox-wrap:hover .checkbox-box{border-color:rgba(255,255,255,0.25)}
+.checkbox-wrap:active .checkbox-box{transform:scale(0.85)}
+.checkbox-wrap.on .checkbox-box{border-color:rgba(255,255,255,0.6);background:rgba(255,255,255,0.04);box-shadow:0 0 16px rgba(255,255,255,0.06)}
+.checkbox-wrap.on .checkbox-box::after{content:'\2713';color:rgba(255,255,255,0.8);font-size:9px;animation:cbPop .2s cubic-bezier(.4,.0,.2,1)}
+@keyframes cbPop{0%{transform:scale(0);opacity:0}50%{transform:scale(1.3)}100%{transform:scale(1);opacity:1}}
+
+/* ── inputs ── */
+.inp-num{width:64px;padding:4px 8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);font-size:12px;outline:none;transition:.2s;border-radius:2px}
+.inp-num:focus{border-color:rgba(255,255,255,0.15);background:rgba(255,255,255,0.03)}
+select{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);padding:4px 8px;font-size:12px;outline:none;min-width:80px;cursor:pointer;transition:.2s;border-radius:2px}
+select:hover{border-color:rgba(255,255,255,0.12)}
+select:focus{border-color:rgba(255,255,255,0.15)}
+select option{background:#000;color:rgba(255,255,255,0.5)}
+input[type=range]{width:80px;background:transparent;accent-color:rgba(255,255,255,0.4);cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.5);border:none;cursor:pointer;transition:transform .15s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
+input[type=range]::-webkit-slider-runnable-track{height:1px;background:rgba(255,255,255,0.06);border-radius:1px}
+.range-val{font-size:10px;color:rgba(255,255,255,0.2);min-width:28px;text-align:right}
+
+/* ── bottom nav ── */
+.bottom-nav{position:fixed;bottom:0;left:0;width:100%;height:40px;display:flex;justify-content:center;align-items:center;z-index:10;border-top:1px solid rgba(255,255,255,0.04)}
+.nav-items{display:flex;gap:0;align-items:center}
+.nav-item{width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;color:rgba(255,255,255,0.12);transition:all .25s ease;position:relative;border-radius:4px}
+.nav-item:hover{color:rgba(255,255,255,0.3);background:rgba(255,255,255,0.02)}
+.nav-item.active{color:rgba(255,255,255,0.5)}
+.nav-item.active::after{content:'';position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);width:14px;height:1px;background:rgba(255,255,255,0.2);animation:navLine .25s ease}
+@keyframes navLine{from{width:0;opacity:0}to{width:14px;opacity:1}}
+
+/* ── mobile / touch ── */
+@media (max-width: 480px) {
+ .main-content { padding: 12px; }
+ .opt-row { padding: 10px 0; }
+ .opt-label { font-size: 13px; }
+ .checkbox-wrap { padding: 6px 0; }
+ .inp-num { min-height: 32px; font-size: 14px; }
+ select { min-height: 32px; font-size: 14px; }
+  .btn-loader { min-height: 44px; font-size: 14px; }
+  .btn-ghost { min-height: 40px; font-size: 13px; }
+ #login-input { width: 80vw; height: 44px; font-size: 14px; }
+ #login-btn { width: 80vw; height: 44px; font-size: 13px; }
+ .nav-item { width: 44px; height: 44px; font-size: 16px; }
+ .header-title { font-size: 13px; }
+}
+
+/* ── ghost buttons ── */
+.btn-ghost { transition: all .25s ease; }
+.btn-ghost:hover { border-color: rgba(255,255,255,0.35) !important; color: rgba(255,255,255,0.7) !important; }
+.btn-ghost:active { transform: scale(.97); }
+
+/* ── tab content animation ── */
+.tab-fade{animation:tabIn .3s ease}
+@keyframes tabIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── notifications ── */
+.notif-container{position:fixed;bottom:16px;right:16px;z-index:999;display:flex;flex-direction:column-reverse;gap:6px;pointer-events:none}
+.notif{background:rgba(0,0,0,0.92);border:1px solid rgba(255,255,255,0.06);padding:8px 12px;display:flex;align-items:center;gap:8px;opacity:0;transform:translateY(6px);animation:nfIn .25s ease forwards;pointer-events:auto;border-radius:3px}
+.notif.out{animation:nfOut .2s ease forwards}
+@keyframes nfIn{to{opacity:1;transform:translateY(0)}}
+@keyframes nfOut{to{opacity:0;transform:translateY(-6px)}}
+.notif-icon{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:8px;color:#fff}
+.notif-text{font-size:11px;color:rgba(255,255,255,0.5);flex:1;letter-spacing:0.2px}
+</style>
+
+
+</head>
+<body>
+
+<div id="splash">
+<div id="splash-title">satella</div>
+<div id="splash-loader"></div>
+<div id="splash-status">loading</div>
+</div>
+
+<div id="login">
+<div id="login-title">satella</div>
+<div id="login-sub">enter your key</div>
+<input id="login-input" placeholder="license key" maxlength="255" autofocus>
+<button id="login-btn" onclick="doLogin()">authenticate</button>
+<div id="login-status">press enter</div>
+<div id="loginError" style="font-size:10px;color:#ff4444;display:none;margin-top:4px"></div>
+</div>
+
+<div id="app">
+<div class="main-header">
+<div class="header-title" id="headerTitle">aimbot</div>
+<div class="header-info">satella v1</div>
+</div>
+
+<div class="main-content">
+<div class="content-child" id="tabContent"></div>
+</div>
+
+<div class="bottom-nav">
+<div class="nav-items">
+<div class="nav-item active" data-tab="0" onclick="switchTab(0)"><i class="fas fa-crosshairs"></i></div>
+<div class="nav-item" data-tab="1" onclick="switchTab(1)"><i class="fas fa-eye"></i></div>
+<div class="nav-item" data-tab="2" onclick="switchTab(2)"><i class="fas fa-bolt"></i></div>
+<div class="nav-item" data-tab="3" onclick="switchTab(3)"><i class="fas fa-sliders-h"></i></div>
+<div class="nav-item" data-tab="4" onclick="switchTab(4)"><i class="fas fa-download"></i></div>
+</div>
+</div>
+
+<div class="notif-container" id="notifContainer"></div>
+
+<script>
+const BASE=''; let opts=null; let curTab=0; let notifId=0; let authToken=''; let loggedIn=false;
+
+function addNotif(text,color,icon){
+ var c=document.getElementById('notifContainer');
+ var id='n'+(notifId++);
+ var div=document.createElement('div');div.className='notif';div.id=id;
+ div.innerHTML='<div class="notif-icon" style="background:'+color+'">'+icon+'</div><div class="notif-text">'+text+'</div>';
+ c.appendChild(div);
+ setTimeout(function(){div.classList.add('out');setTimeout(function(){div.remove()},200)},3000);
+}
+
+// ── particles ──
+(function(){
+ for(var i=60;i--;){
+  var d=document.createElement('div');
+  d.className='particle';
+  var s=Math.random()*2.5+1;
+  var dur=Math.random()*22+14;
+  d.style.cssText='width:'+s+'px;height:'+s+'px;left:'+(Math.random()*100)+'%;bottom:-10px;background:rgba(255,255,255,'+(Math.random()*0.25+0.05)+');animation-duration:'+dur+'s;animation-delay:'+(Math.random()*dur)+'s';
+  document.body.appendChild(d);
+ }
+})();
+
+function byKey(arr,key){for(var i=0;i<arr.length;i++){if(arr[i].k===key)return arr[i];}return null;}
+
+function handleCbClick(el){
+ var path=el.getAttribute('data-path');if(!path)return;
+ el.classList.toggle('on');
+ var isOn=el.classList.contains('on');
+ fetch(BASE+'/api/set?path='+encodeURIComponent(path)+'&value='+encodeURIComponent(isOn?'true':'false'));
+}
+
+function chk(label,path,checked){
+ return '<div class="opt-row" style="justify-content:flex-start;gap:10px"><div class="checkbox-wrap '+(checked?'on':'')+'" data-path="'+path+'" onclick="handleCbClick(this)"><span class="checkbox-box"></span><span class="opt-label" style="cursor:pointer">'+label+'</span></div></div>';
+}
+
+function ctrl(opt,path){
+ var p=path||'';
+ if(opt.t==='bool') return '<div class="checkbox-wrap '+(opt.v?'on':'')+'" data-path="'+p+'" onclick="handleCbClick(this)"><span class="checkbox-box"></span></div>';
+ if(opt.t==='combo') return '<select onchange="update(\''+p+'\',this.value)">'+opt.opts.map(function(x,i){return '<option value="'+i+'" '+(i===opt.v?'selected':'')+'>'+x+'</option>';}).join('')+'</select>';
+ if(opt.t==='int') return '<input class="inp-num" type="number" value="'+opt.v+'" min="'+opt.min+'" max="'+opt.max+'" onchange="update(\''+p+'\',this.value)">';
+ if(opt.t==='float'){var st=(opt.max-opt.min)>100?1:0.1;return '<div style="display:flex;align-items:center;gap:8px"><input type="range" value="'+opt.v+'" min="'+opt.min+'" max="'+opt.max+'" step="'+st+'" oninput="update(\''+p+'\',this.value);this.nextElementSibling.textContent=parseFloat(this.value).toFixed(1)"><span class="range-val">'+parseFloat(opt.v).toFixed(1)+'</span></div>';}
+ return '';
+}
+
+function row(label,ctrlHtml){
+ return '<div class="opt-row"><span class="opt-label">'+label+'</span><div class="opt-control">'+ctrlHtml+'</div></div>';
+}
+
+async function loadOpts(){
+ try{var r=await fetch(BASE+'/api/options?_='+Date.now());var d=await r.json();opts=d;renderTab(curTab);return true}catch(e){return false}
+}
+
+function switchTab(idx){
+ curTab=idx;
+ document.querySelectorAll('.nav-item').forEach(function(el,i){el.classList.toggle('active',i===idx);});
+ document.getElementById('headerTitle').textContent=['aimbot','esp','exploits','config','loader'][idx];
+ renderTab(idx);
+}
+
+function renderTab(idx){
+ var con=document.getElementById('tabContent');
+ if(!opts){con.innerHTML='';return}
+
+ // loader tab (4) nao precisa de secao de options
+ if(idx===4){
+   renderTabLoader(con);
+   con.classList.remove('tab-fade');
+   void con.offsetWidth;
+   con.classList.add('tab-fade');
+   return;
+ }
+
+ var sec=opts.sections[idx]; if(!sec||!sec.options){con.innerHTML='';return}
+ var o=sec.options;
+ var html='';
+ if(idx===0){
+  html='<div class="section-title">Aimbot</div>'
+  +chk('Enabled','LegitBot.AimBot.Enabled',byKey(o,'Enabled').v)
+  +chk('Precision','LegitBot.AimBot.Precision',byKey(o,'Precision').v)
+  +chk('Extended Pixel','LegitBot.AimBot.Pixel',byKey(o,'Pixel').v)
+  +chk('Ignore Knocked','LegitBot.AimBot.IgnoreKnocked',byKey(o,'IgnoreKnocked').v)
+  +'<div class="subsection-title">Mode</div>'
+  +row('Aim Type',ctrl(byKey(o,'AimType'),'LegitBot.AimBot.AimType'))
+  +row('Delay',ctrl(byKey(o,'DelayMode'),'LegitBot.AimBot.DelayMode'))
+  +chk('Pull Cam After Kill','LegitBot.AimBot.PullCamAfterKill',byKey(o,'PullCamAfterKill').v);
+ }
+ else if(idx===1){
+  html='<div class="section-title">ESP</div><div class="opt-row-cols">'
+  +chk('ESP','Visuals.ESP.Players.Enabled',byKey(o,'Enabled').v)
+  +chk('Box','Visuals.ESP.Players.Box',byKey(o,'Box').v)
+  +chk('Snap Lines','Visuals.ESP.Players.SnapLines',byKey(o,'SnapLines').v)
+  +chk('Health','Visuals.ESP.Players.HealthBar',byKey(o,'HealthBar').v)
+  +chk('Skeleton','Visuals.ESP.Players.Skeleton',byKey(o,'Skeleton').v)
+  +chk('Name','Visuals.ESP.Players.Name',byKey(o,'Name').v)
+  +chk('Weapon','Visuals.ESP.Players.WeaponName',byKey(o,'WeaponName').v)
+  +'</div>';
+ }
+ else if(idx===2){
+  html='<div class="section-title">Exploits</div><div class="opt-row-cols">'
+  +chk('No Recoil','Exploits.NoRecoil',byKey(o,'NoRecoil').v)
+  +chk('Weapon Attr','Exploits.WeaponAttributes',byKey(o,'WeaponAttributes').v)
+  +chk('Spin Bot','Exploits.SpinBot',byKey(o,'SpinBot').v)
+  +chk('Fast Medkit','Exploits.FastMedkit',byKey(o,'FastMedkit').v)
+  +chk('Fast Reload','Exploits.FastReload',byKey(o,'FastReload').v)
+  +chk('Silent Aim','Exploits.SilentAimEnabled',byKey(o,'SilentAimEnabled').v)
+  +'</div>';
+ }
+ else if(idx===3){
+   html='<div class="section-title">Config</div>'
+   +chk('Capture Bypass','General.CaptureBypass',byKey(o,'CaptureBypass').v)
+   +chk('Stream Mode','General.StreamMode',byKey(o,'StreamMode').v)
+   +'<div class="subsection-title">Bypass</div>'
+   +'<div class="opt-row"><span class="opt-label">Stream Proof Bypass</span><div class="opt-control"><button id="bypassBtn" onclick="triggerBypass()" style="padding:4px 12px;border:none;border-radius:4px;cursor:pointer;font-size:12px;background:rgba(123,47,252,0.7);color:rgba(255,255,255,0.9);transition:.15s">Activate Bypass</button></div></div>'
+   +'<div class="subsection-title">Keybinds</div>'
+   +row('Aimbot Key',ctrl(byKey(o,'KeyBind'),'LegitBot.AimBot.KeyBind'));
+ }
+ con.innerHTML=html;
+ con.classList.remove('tab-fade');
+ void con.offsetWidth;
+ con.classList.add('tab-fade');
+}
+
+function renderTabLoader(con){
+ con.innerHTML='<div class="section-title">Ghost Agent</div>'
+ +'<div id="ghostStatus" class="opt-row"><span class="opt-label">Ghost</span><span class="info-value" id="ghostStatusText" style="color:#666">offline</span></div>'
+ +'<div class="opt-row"><span class="opt-label">Alvo</span><span class="info-value" id="ghostTarget">HD-Player.exe</span></div>'
+ +'<div class="opt-row"><span class="opt-label">Status</span><span class="info-value" id="ghostDetail">—</span></div>'
+ +'<div class="subsection-title">Comandos</div>'
+ +'<div style="display:flex;flex-direction:column;gap:10px;padding:8px 0">'
+ +'<button id="ghostLoadBtn" class="btn-ghost" onclick="ghostCommand(\'load\')" style="padding:10px 0;border:1px solid rgba(255,255,255,0.2);border-radius:6px;cursor:pointer;font-size:12px;font-weight:400;background:#000;color:rgba(255,255,255,0.5);letter-spacing:2px;text-transform:uppercase;width:140px;align-self:center">load cheat</button>'
+ +'<button id="ghostUnloadBtn" class="btn-ghost" onclick="ghostCommand(\'unload\')" style="padding:10px 0;border:1px solid rgba(255,255,255,0.2);border-radius:6px;cursor:pointer;font-size:12px;font-weight:400;background:#000;color:rgba(255,255,255,0.5);letter-spacing:2px;text-transform:uppercase;width:140px;align-self:center">unload</button>'
+ +'<button id="ghostRefreshBtn" onclick="ghostRefresh()" style="padding:6px 0;border:1px solid rgba(255,255,255,0.08);border-radius:4px;cursor:pointer;font-size:10px;background:#000;color:rgba(255,255,255,0.2);letter-spacing:1px;text-transform:uppercase;width:100px;align-self:center">atualizar</button>'
+ +'</div>'
+ +'<div class="subsection-title">Conexão</div>'
+ +'<div class="opt-row"><span class="opt-label">IP Local</span><span class="info-value mono" id="loaderLocalIp">—</span></div>'
+ +'<div class="subsection-title">Log</div>'
+ +'<div id="loaderLog" style="font-size:11px;color:rgba(255,255,255,0.25);padding:8px 0;min-height:36px;font-family:monospace;white-space:pre-wrap;line-height:1.4">[loader] aguardando...</div>';
+}
+
+async function update(p,v){
+ try{await fetch(BASE+'/api/set?path='+encodeURIComponent(p)+'&value='+encodeURIComponent(String(v)));}catch(e){}
+}
+
+async function triggerBypass(){
+ var btn=document.getElementById('bypassBtn');
+ btn.disabled=true;btn.textContent='Activating...';
+ try{
+  var r=await fetch(BASE+'/api/bypass',{method:'POST'});
+  var d=await r.json();
+  if(d.success){
+   addNotif('Bypass activated!','rgb(0,214,115)','\u2713');
+   btn.textContent='Bypass Active';
+   btn.style.background='rgba(0,214,115,0.6)';
+  }else{
+   addNotif('Bypass failed: '+d.error,'rgb(255,60,60)','\u2715');
+   btn.disabled=false;btn.textContent='Activate Bypass';
+  }
+ }catch(e){
+  addNotif('Bypass error','rgb(255,60,60)','\u2715');
+  btn.disabled=false;btn.textContent='Activate Bypass';
+ }
+}
+
+// ── loader ──
+var loaderState = {};
+var selectedDll = '';
+
+function loaderLog(msg) {
+ var el = document.getElementById('loaderLog');
+ if (el) el.textContent = '> ' + msg;
+}
+
+var loaderIps = [];
+
+async function loaderGetIp() {
+ try {
+  var r = await fetch(BASE + '/api/loader/ip');
+  var d = await r.json();
+  loaderIps = d.ips || [];
+  var el = document.getElementById('loaderLocalIp');
+  if (el) {
+   if (loaderIps.length > 0) {
+    el.textContent = loaderIps[0] + ':' + window.location.port;
+    el.style.color = '#4ade80';
+   } else {
+    el.textContent = '—';
+    el.style.color = '#666';
+   }
+  }
+ } catch(e) {}
+}
+
+async function loaderGetStatus() {
+ try {
+  var r = await fetch(BASE + '/api/loader/status');
+  var s = await r.json();
+  loaderState = s;
+  return s;
+ } catch(e) {
+  return null;
+ }
+}
+
+async function loaderLoadDlls() {
+ try {
+  var r = await fetch(BASE + '/api/loader/dlls');
+  var dlls = await r.json();
+  var sel = document.getElementById('loaderDllSelect');
+  if (!sel) return;
+  sel.innerHTML = '';
+  if (dlls.length === 0) {
+   sel.innerHTML = '<option value="">— nenhuma dll —</option>';
+   return;
+  }
+  for (var i = 0; i < dlls.length; i++) {
+   var opt = document.createElement('option');
+   opt.value = dlls[i].path;
+   opt.textContent = dlls[i].name + ' (' + (dlls[i].size / 1024).toFixed(0) + ' KB)';
+   sel.appendChild(opt);
+  }
+  // select the first or the one from config
+  if (loaderState && loaderState.config && loaderState.config.dll_path) {
+   var found = false;
+   for (var j = 0; j < sel.options.length; j++) {
+    if (sel.options[j].value === loaderState.config.dll_path) {
+     sel.selectedIndex = j;
+     found = true;
+     break;
+    }
+   }
+   if (!found) sel.selectedIndex = 0;
+  } else {
+   sel.selectedIndex = 0;
+  }
+  selectedDll = sel.value;
+ } catch(e) {
+  loaderLog('erro ao listar dlls');
+ }
+}
+
+function loaderSelectDll() {
+ var sel = document.getElementById('loaderDllSelect');
+ if (sel) selectedDll = sel.value;
+}
+
+async function loaderRefreshUI() {
+ var s = await loaderGetStatus();
+ if (!s) return;
+
+ var stEl = document.getElementById('loaderStatusText');
+ if (stEl) {
+  if (s.pid && s.pid > 0) {
+   stEl.textContent = 'rodando ✓';
+   stEl.style.color = '#4ade80';
+  } else {
+   stEl.textContent = 'fechado ✗';
+   stEl.style.color = '#f87171';
+  }
+ }
+
+ var tEl = document.getElementById('loaderTarget');
+ if (tEl) tEl.textContent = s.target || 'HD-Player.exe';
+
+ var pEl = document.getElementById('loaderPid');
+ if (pEl) pEl.textContent = s.pid && s.pid > 0 ? s.pid : '—';
+
+ var dEl = document.getElementById('loaderDll');
+ if (dEl) {
+  if (s.dll_exists) {
+   dEl.textContent = '✓ pronta';
+   dEl.style.color = '#4ade80';
+  } else {
+   dEl.textContent = '✗ ausente';
+   dEl.style.color = '#f87171';
+  }
+ }
+
+ var iEl = document.getElementById('loaderInjector');
+ if (iEl) {
+  if (s.injector_exists) {
+   iEl.textContent = '✓ disponivel';
+   iEl.style.color = '#4ade80';
+  } else {
+   iEl.textContent = '✗ nao encontrado';
+   iEl.style.color = '#f87171';
+  }
+ }
+
+ // atualiza inputs
+ var inpTarget = document.getElementById('loaderTargetInput');
+ if (inpTarget && s.config) inpTarget.value = s.config.target_process || 'HD-Player.exe';
+
+ // recarrega lista de dlls se vazia
+ var sel = document.getElementById('loaderDllSelect');
+ if (sel && sel.options.length === 0) loaderLoadDlls();
+}
+
+async function loaderSaveConfig() {
+ var target = document.getElementById('loaderTargetInput');
+ if (!target) return;
+
+ var cfg = {
+  target_process: target.value || 'HD-Player.exe',
+  dll_path: selectedDll || loaderState.dll_path || '',
+  dll_url: '',
+  auto_inject: false,
+  inject_on_start: false,
+  poll_interval: 2000
+ };
+
+ try {
+  var r = await fetch(BASE + '/api/loader/config', {
+   method: 'POST',
+   headers: {'Content-Type': 'application/json'},
+   body: JSON.stringify(cfg)
+  });
+  var d = await r.json();
+  if (d.success) {
+   loaderLog('config salva (dll: ' + path.basename(cfg.dll_path || '—') + ')');
+   addNotif('Config saved', 'rgb(0,214,115)', '\u2713');
+  }
+ } catch(e) {
+  loaderLog('erro ao salvar');
+ }
+}
+
+async function loaderDownload() {
+ var url = prompt('URL da DLL para baixar:');
+ if (!url) return;
+ loaderLog('baixando...');
+ try {
+  var r = await fetch(BASE + '/api/loader/download', {
+   method: 'POST',
+   headers: {'Content-Type': 'application/json'},
+   body: JSON.stringify({ url: url })
+  });
+  var d = await r.json();
+  if (d.success) {
+   loaderLog('download ok (' + d.bytes + ' bytes)');
+   addNotif('DLL baixada', 'rgb(0,214,115)', '\u2713');
+   loaderLoadDlls();
+   loaderRefreshUI();
+  } else {
+   loaderLog('erro: ' + (d.error || 'falha'));
+   addNotif('Download failed', 'rgb(255,60,60)', '\u2715');
+  }
+ } catch(e) {
+  loaderLog('erro: ' + e.message);
+ }
+}
+
+async function loaderInject() {
+ var dllPath = selectedDll || loaderState.dll_path || '';
+ if (!dllPath) {
+  loaderLog('selecione uma dll primeiro');
+  addNotif('Selecione uma DLL', 'rgb(255,180,0)', '!');
+  return;
+ }
+ loaderLog('injetando ' + dllPath.split('\\').pop() + '...');
+ try {
+  var r = await fetch(BASE + '/api/loader/inject', {
+   method: 'POST',
+   headers: {'Content-Type': 'application/json'},
+   body: JSON.stringify({ dll_path: dllPath })
+  });
+  var d = await r.json();
+  if (d.success) {
+   loaderLog('✓ injetado (PID: ' + d.pid + ')');
+   addNotif('Injetado com sucesso!', 'rgb(0,214,115)', '\u2713');
+  } else {
+   loaderLog('✗ ' + (d.msg || d.error || 'falha'));
+   addNotif('Inject failed: ' + (d.msg || d.error || 'erro'), 'rgb(255,60,60)', '\u2715');
+  }
+  loaderRefreshUI();
+ } catch(e) {
+   loaderLog('erro: ' + e.message);
+  }
+ }
+
+// ── ghost ──
+async function ghostCommand(cmd) {
+ loaderLog('[ghost] enviando comando: ' + cmd);
+ try {
+  var r = await fetch(BASE + '/api/ghost/command', {
+   method: 'POST',
+   headers: {'Content-Type': 'application/json'},
+   body: JSON.stringify({ id: 'default', command: cmd })
+  });
+  var d = await r.json();
+  if (d.success) {
+   loaderLog('[ghost] comando ' + cmd + ' enviado');
+   addNotif('Ghost: ' + cmd, 'rgb(74,222,128)', '\u25B6');
+   setTimeout(ghostRefresh, 1500);
+  } else {
+   loaderLog('[ghost] erro: ' + (d.error || 'unknown'));
+  }
+ } catch(e) {
+  loaderLog('[ghost] erro: ' + e.message);
+ }
+}
+
+async function ghostRefresh() {
+ try {
+  var r = await fetch(BASE + '/api/ghost/status');
+  var d = await r.json();
+  var ghosts = d.ghosts || [];
+  var stEl = document.getElementById('ghostStatusText');
+  var dtEl = document.getElementById('ghostDetail');
+  if (!stEl) return;
+
+  if (ghosts.length === 0) {
+   stEl.textContent = 'offline';
+   stEl.style.color = '#666';
+   if (dtEl) dtEl.textContent = 'nenhum ghost conectado';
+   return;
+  }
+
+  var g = ghosts[0];
+  var statusLabel = g.status || 'online';
+  var statusColor = '#4ade80';
+  if (statusLabel === 'injected') { statusLabel = 'INJETADO'; statusColor = '#ff6b6b'; }
+  else if (statusLabel === 'loading') { statusLabel = 'injetando...'; statusColor = '#fbbf24'; }
+  else if (statusLabel === 'error') { statusLabel = 'ERRO'; statusColor = '#f87171'; }
+  else if (!g.online) { statusLabel = 'offline'; statusColor = '#666'; }
+
+  var label = g.online ? statusLabel : 'offline';
+  var detail = (g.extra || g.status || '—') + (g.online ? '' : ' (offline)');
+
+  // log mudancas de estado
+  if (g.online && g.status && g.status !== 'online' && g.status !== 'idle' && g.status !== 'waiting') {
+   loaderLog('[ghost] status: ' + g.status + (g.extra ? ' — ' + g.extra : ''));
+  }
+
+  stEl.textContent = label;
+  stEl.style.color = g.online ? statusColor : '#666';
+  if (dtEl) dtEl.textContent = detail;
+ } catch(e) {
+  loaderLog('[ghost] erro refresh: ' + e.message);
+ }
+}
+
+// ── auth ──
+async function doLogin(){
+ var key=document.getElementById('login-input').value.trim();
+ if(!key)return;
+ var err=document.getElementById('loginError');
+ var btn=document.getElementById('login-btn');
+ err.style.display='none';
+ btn.disabled=true;btn.textContent='...';
+ try{
+  var r=await fetch(BASE+'/api/auth/key',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:key})});
+  var d=await r.json();
+  if(d.success){
+   authToken=d.token;
+   addNotif('Key validated!','rgb(0,214,115)','\u2713');
+   enterMain();
+  }else{
+   err.textContent=d.error||'Invalid key';
+   err.style.display='block';
+  }
+ }catch(e){
+  err.textContent='Connection error';
+  err.style.display='block';
+ }
+ btn.disabled=false;btn.textContent='authenticate';
+}
+
+async function verifySession(){
+ if(!authToken)return false;
+ try{
+  var r=await fetch(BASE+'/api/auth/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:authToken})});
+  var d=await r.json();
+  return d.success;
+ }catch(e){return false}
+}
+
+function enterMain(){
+ loggedIn=true;
+ document.getElementById('app').classList.add('visible');
+ document.getElementById('login').classList.add('hidden');
+ document.getElementById('splash').classList.add('hidden');
+  loadOpts();
+  // polling do loader
+  loaderGetIp();
+  loaderRefreshUI();
+   setInterval(loaderRefreshUI, 3000);
+   setInterval(ghostRefresh, 5000);
+   setInterval(loaderGetIp, 15000);
+ setInterval(async function(){
+  if(loggedIn&&authToken){
+   var ok=await verifySession();
+   if(!ok){
+    addNotif('Session expired. Please login again.','rgb(255,60,60)','\u2715');
+    loggedIn=false;authToken='';
+    document.getElementById('app').classList.remove('visible');
+    document.getElementById('login').classList.remove('hidden');
+    document.getElementById('login-input').value='';
+   }
+  }
+ },30000);
+}
+
+document.getElementById('login-input').addEventListener('keydown',function(e){
+ if(e.key==='Enter')doLogin();
+});
+
+// ── init: splash → login → app ──
+(async function init(){
+ var ok=await loadOpts();
+ document.getElementById('splash-status').textContent=ok?'ready':'error';
+ await new Promise(function(r){setTimeout(r,500)});
+ document.getElementById('splash').classList.add('hidden');
+})();
+</script>
+</body>
+</html>
+

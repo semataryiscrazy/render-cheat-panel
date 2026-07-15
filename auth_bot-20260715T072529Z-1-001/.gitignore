@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Environment
+.env
+.env.local
+config.local.json
+
+# Database
+*.db
+*.sqlite3
+
+# Discord bot
+config.json  # contains token — DO NOT COMMIT
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Node (if any)
+node_modules/

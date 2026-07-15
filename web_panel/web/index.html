@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>web panel — loader</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="panel">
+            <div class="header">
+                <div class="header-left">
+                    <span class="logo">◈</span>
+                    <h1>loader</h1>
+                </div>
+                <div class="header-right">
+                    <span class="badge" id="statusBadge">offline</span>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <div class="info-row">
+                    <span class="info-label">alvo</span>
+                    <span class="info-value" id="targetField">HD-Player.exe</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">pid</span>
+                    <span class="info-value mono" id="pidField">—</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">dll</span>
+                    <span class="info-value mono" id="dllField">❌ ausente</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">injeção</span>
+                    <span class="info-value mono" id="injectField">⏳ pendente</span>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button id="btnDownload" class="btn btn-download">
+                    <span class="btn-icon">⬇</span>
+                    baixar dll
+                </button>
+                <button id="btnInject" class="btn btn-inject" disabled>
+                    <span class="btn-icon">💉</span>
+                    injetar
+                </button>
+            </div>
+
+            <div class="log-section">
+                <div class="log-header">▸ console</div>
+                <div class="log-content" id="logOutput">[system] aguardando servidor...</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <span>localhost:8080</span>
+            <span class="dot">•</span>
+            <span id="uptimeField">conectando...</span>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

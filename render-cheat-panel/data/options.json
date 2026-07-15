@@ -1,0 +1,347 @@
+{
+  "sections": [
+    {
+      "name": "AimBot",
+      "options": [
+        {
+          "k": "Enabled",
+          "t": "bool",
+          "v": true
+        },
+        {
+          "k": "Precision",
+          "t": "bool",
+          "v": false
+        },
+        {
+          "k": "ScopeTracking",
+          "t": "bool",
+          "v": false
+        },
+        {
+          "k": "Pixel",
+          "t": "bool",
+          "v": false
+        },
+        {
+          "k": "IgnoreKnocked",
+          "t": "bool",
+          "v": false
+        },
+        {
+          "k": "TargetNPC",
+          "t": "bool",
+          "v": false
+        },
+        {
+          "k": "PullCamAfterKill",
+          "t": "bool",
+          "v": false
+        },
+        {
+          "k": "MaxDistance",
+          "t": "int",
+          "v": 300,
+          "min": 0,
+          "max": 600
+        },
+        {
+          "k": "DelayMode",
+          "t": "combo",
+          "v": 0,
+          "opts": [
+            "0 Peito",
+            "1 Peito",
+            "2 Peitos",
+            "3 Peitos",
+            "4 Peitos",
+            "5 Peitos",
+            "Random"
+          ]
+        },
+        {
+          "k": "AimType",
+          "t": "combo",
+          "v": 0,
+          "opts": [
+            "Aim Rage",
+            "Aim Neck",
+            "Aim Legit"
+          ]
+        },
+        {
+          "k": "FOV",
+          "t": "float",
+          "v": 180,
+          "min": 0,
+          "max": 360
+        },
+        {
+          "k": "SmoothH",
+          "t": "float",
+          "v": 10,
+          "min": 0,
+          "max": 200,
+          "l": "Smooth Horizontal"
+        },
+        {
+          "k": "SmoothV",
+          "t": "float",
+          "v": 10,
+          "min": 0,
+          "max": 200,
+          "l": "Smooth Vertical"
+        },
+        {
+          "k": "ColliderFOV",
+          "t": "float",
+          "v": 180,
+          "min": 0,
+          "max": 360
+        },
+        {
+          "k": "ColliderVisibleOnly",
+          "t": "bool",
+          "v": false
+        },
+        {
+          "k": "PullCamHeight",
+          "t": "float",
+          "v": 0.5,
+          "min": 0.1,
+          "max": 1
+        }
+      ]
+    },
+    {
+      "name": "ESP Players",
+      "options": [
+        {
+          "k": "Enabled",
+          "t": "bool",
+          "v": false
+        },
+        {
+          "k": "ShowLocalPlayer",
+          "t": "bool",
+          "v": false
+        },
+        {
+          "k": "ShowNPCs",
+          "t": "bool",
+          "v": false
+        },
+        {
+          "k": "Box",
+          "t": "bool",
+          "v": false
+        },
+        {
+          "k": "BoxStyle",
+          "t": "combo",
+          "v": 0,
+          "opts": [
+            "Full",
+            "Cornered"
+          ]
+        },
+        {
+          "k": "Skeleton",
+          "t": "bool",
+          "v": false
+        },
+        {
+          "k": "Name",
+          "t": "bool",
+          "v": false
+        },
+        {
+          "k": "HealthBar",
+          "t": "bool",
+          "v": false
+        },
+        {
+          "k": "HealthBarPos",
+          "t": "combo",
+          "v": 0,
+          "opts": [
+            "Left",
+            "Right",
+            "Top",
+            "Bottom"
+          ]
+        },
+        {
+          "k": "ArmorBar",
+          "t": "bool",
+          "v": false
+        },
+        {
+          "k": "WeaponName",
+          "t": "bool",
+          "v": false
+        },
+        {
+          "k": "Distance",
+          "t": "bool",
+          "v": false
+        },
+        {
+          "k": "SnapLines",
+          "t": "bool",
+          "v": false
+        },
+        {
+          "k": "SnapLinesPos",
+          "t": "combo",
+          "v": 0,
+          "opts": [
+            "Top",
+            "Bottom"
+          ]
+        },
+        {
+          "k": "RenderDistance",
+          "t": "int",
+          "v": 300,
+          "min": 0,
+          "max": 600
+        }
+      ]
+    },
+    {
+      "name": "Exploits",
+      "options": [
+        {
+          "k": "NoRecoil",
+          "t": "bool",
+          "v": false
+        },
+        {
+          "k": "NoRecoilStrength",
+          "t": "float",
+          "v": 100,
+          "min": 0,
+          "max": 100,
+          "l": "Recoil Reduction %"
+        },
+        {
+          "k": "WeaponAttributes",
+          "t": "bool",
+          "v": false
+        },
+        {
+          "k": "WeaponAttributesLevel",
+          "t": "combo",
+          "v": 0,
+          "opts": [
+            "LV 1",
+            "LV 2",
+            "LV 3",
+            "LV 4"
+          ]
+        },
+        {
+          "k": "SpinBot",
+          "t": "bool",
+          "v": false
+        },
+        {
+          "k": "SpinBotSpeed",
+          "t": "float",
+          "v": 10,
+          "min": 0,
+          "max": 50
+        },
+        {
+          "k": "SpeedHack",
+          "t": "bool",
+          "v": false
+        },
+        {
+          "k": "SpeedMultiplier",
+          "t": "float",
+          "v": 2,
+          "min": 1,
+          "max": 10
+        },
+        {
+          "k": "FastMedkit",
+          "t": "bool",
+          "v": false
+        },
+        {
+          "k": "FastReload",
+          "t": "bool",
+          "v": false
+        },
+        {
+          "k": "SilentAimEnabled",
+          "t": "bool",
+          "v": false
+        },
+        {
+          "k": "SilentAimUseFOV",
+          "t": "bool",
+          "v": false
+        },
+        {
+          "k": "SilentAimFOV",
+          "t": "float",
+          "v": 180,
+          "min": 0,
+          "max": 360
+        },
+        {
+          "k": "SilentAimDistance",
+          "t": "int",
+          "v": 300,
+          "min": 0,
+          "max": 600
+        },
+        {
+          "k": "SilentAimHitBox",
+          "t": "combo",
+          "v": 0,
+          "opts": [
+            "Head",
+            "Neck",
+            "Chest"
+          ]
+        },
+        {
+          "k": "SilentAimTargetBots",
+          "t": "bool",
+          "v": false
+        }
+      ]
+    },
+    {
+      "name": "General",
+      "options": [
+        {
+          "k": "CaptureBypass",
+          "t": "bool",
+          "v": false
+        },
+        {
+          "k": "StreamMode",
+          "t": "bool",
+          "v": false
+        },
+        {
+          "k": "BypassEnabled",
+          "t": "bool",
+          "v": false
+        },
+        {
+          "k": "MenuToggleKey",
+          "t": "int",
+          "v": 45,
+          "min": 0,
+          "max": 255
+        }
+      ]
+    }
+  ]
+}

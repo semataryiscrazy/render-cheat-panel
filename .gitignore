@@ -1,0 +1,79 @@
+# Visual Studio generated
+*.obj
+*.exe
+*.dll
+*.lib
+*.exp
+*.pdb
+*.ilk
+*.log
+*.sdf
+*.suo
+*.user
+*.vs/
+Debug/
+Release/
+x64/
+x86/
+*.tlog
+ipch/
+
+# Build artifacts
+build_log.txt
+build_dll_log.txt
+ghost_build_log.txt
+asm_log.txt
+web_panel_build_log.txt
+
+# Node
+node_modules/
+package-lock.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+*.db
+*.sqlite3
+
+# Environment
+.env
+.env.local
+
+# OS
+Thumbs.db
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Custom
+loader.h  # generated from cheat.dll bytes
+
+# Sensitive
+git.txt
+nyx_core.txt
+nyx_style.txt
+r.txt
+
+# IDE / Editors
+.opencode/
+
+# Logs
+logs/
+
+# Backup / external
+External space lixo/
+
+# State files
+ghost/cmd.json
+ghost/ghost_id.txt
+ghost/injected.txt
+ghost/upload_result.txt
+cheat/cheat.bin
